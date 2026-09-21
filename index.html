@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F2F4F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1420" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="分帳簿">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+</head>
+<body>
+<title>三人分帳簿 手機版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface-2:#F7F8FB; --ink:#172033; --muted:#6B7488;
+  --line:#DDE2EC; --line-strong:#C7CEDC; --accent:#1F5AD6; --accent-ink:#FFFFFF; --accent-soft:#E6EDFC;
+  --p0:#1F5AD6; --p1:#D97A22; --p2:#7C3AED;
+  --p0-soft:#E6EDFC; --p1-soft:#FBEEDF; --p2-soft:#EFE6FD;
+  --pos:#17855A; --pos-soft:#E2F3EA; --neg:#C63F2B; --neg-soft:#FBE7E3;
+  --shadow:0 1px 2px rgba(23,32,51,.06), 0 8px 24px -12px rgba(23,32,51,.18);
+  --radius:14px; --radius-sm:9px;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1420; --surface:#181F2E; --surface-2:#1F2739; --ink:#E8ECF4; --muted:#9AA3B8;
+    --line:#2A3347; --line-strong:#3A4459; --accent:#6C95F0; --accent-ink:#0F1420; --accent-soft:#1E2B4A;
+    --p0:#6C95F0; --p1:#F0A25A; --p2:#B08CF5;
+    --p0-soft:#1E2B4A; --p1-soft:#3A2A18; --p2-soft:#2C2144;
+    --pos:#4FC48E; --pos-soft:#153327; --neg:#F0806C; --neg-soft:#3C1F1A;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1420; --surface:#181F2E; --surface-2:#1F2739; --ink:#E8ECF4; --muted:#9AA3B8;
+  --line:#2A3347; --line-strong:#3A4459; --accent:#6C95F0; --accent-ink:#0F1420; --accent-soft:#1E2B4A;
+  --p0:#6C95F0; --p1:#F0A25A; --p2:#B08CF5;
+  --p0-soft:#1E2B4A; --p1-soft:#3A2A18; --p2-soft:#2C2144;
+  --pos:#4FC48E; --pos-soft:#153327; --neg:#F0806C; --neg-soft:#3C1F1A;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:20px;font-weight:700;letter-spacing:.01em}
+h2{font-size:15px;font-weight:700}
+.eyebrow{font-size:11.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* header */
+.top{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.brandtext{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;flex:1;min-width:0}
+.iconbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:500;color:var(--muted);min-height:34px;white-space:nowrap}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.projline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+.projname{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:3px 10px;border-radius:999px;max-width:100%;min-width:0}
+.projname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projtag{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px}
+.projlist{display:flex;flex-direction:column;gap:6px}
+.projitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);text-align:left;width:100%}
+.projitem.cur{border-color:var(--accent);background:var(--accent-soft)}
+.projitem b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projitem small{color:var(--muted);font-size:12px;white-space:nowrap}
+.projpanel{width:100%}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:14px}
+.tabs button{border:0;background:transparent;border-radius:9px;padding:9px 4px;min-height:42px;font-weight:500;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:5px;font-size:14px}
+@media (max-width:360px){.tabs button svg{display:none}}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs .badge{font-family:var(--mono);font-size:11px;padding:0 6px;border-radius:999px;background:var(--surface-2);color:var(--muted);line-height:18px}
+.tabs button[aria-selected="true"] .badge{background:rgba(255,255,255,.25);color:inherit}
+.panels{display:flex;flex-direction:column}
+.ratebar{padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.ratebar .rate{border:0;padding:0;background:transparent}
+.mark{width:34px;height:34px;border-radius:10px;background:#1B2436;display:grid;place-items:center;flex:none}
+.mark svg{display:block}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.members{display:flex;flex-wrap:wrap;gap:8px}
+.member{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px}
+.member .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.member input{border:0;background:transparent;width:6ch;min-width:3ch;padding:0;font-weight:500;outline:none;border-bottom:1px dashed var(--line-strong)}
+.member input:focus{border-bottom-color:var(--accent)}
+.member .tag{font-size:11px;color:var(--muted)}
+.member.btn-like{cursor:pointer;gap:6px;padding:5px 12px;font-weight:500;color:var(--accent);border-color:var(--accent);border-style:dashed;background:transparent}
+.member.btn-like:hover{background:var(--accent-soft)}
+.namepanel{width:100%}
+.namefields{display:flex;flex-direction:column;gap:10px}
+.namefield{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
+.namefield .dot{width:12px;height:12px;border-radius:50%}
+.namefield .input{padding-left:12px}
+.rate{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.rate input{width:7ch;border:0;background:transparent;padding:0;text-align:right;color:var(--ink);outline:none;border-bottom:1px dashed var(--line-strong)}
+.rate input:focus{border-bottom-color:var(--accent)}
+.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.status .led{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.status.on .led{background:var(--pos)}
+
+/* layout */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card > .head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card > .body{padding:18px}
+.stack{display:flex;flex-direction:column;gap:20px}
+
+/* form */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lbl{font-size:12.5px;font-weight:500;color:var(--muted)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form .span{grid-column:1 / -1}
+@media (max-width:480px){.form{grid-template-columns:1fr}}
+.input{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;outline:none;min-height:40px}
+.input:focus{border-color:var(--accent);background:var(--surface)}
+.input.num{font-size:16px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:3px;gap:3px}
+.seg button{border:0;background:transparent;border-radius:6px;padding:6px 10px;font-weight:500;color:var(--muted);min-height:32px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg.wide{display:flex}.seg.wide button{flex:1}
+.seg.pay button[aria-pressed="true"]{color:var(--accent-ink);background:var(--pc)}
+.amount{position:relative}
+.amount .unit{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+.amount .input{padding-left:48px}
+.shares{display:flex;flex-direction:column;gap:8px}
+.share{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
+.share .who{display:flex;align-items:center;gap:8px;min-width:88px;font-weight:500}
+.share .who .dot{width:10px;height:10px;border-radius:50%}
+.share .who small{font-size:11px;color:var(--muted);font-weight:400}
+.share .input[readonly]{color:var(--muted);background:transparent;border-style:dashed}
+.sharehead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--radius-sm);padding:7px 12px;font-weight:500;min-height:34px}
+.btn:hover{border-color:var(--accent)}
+.btn.sm{padding:4px 10px;min-height:28px;font-size:12.5px;white-space:nowrap}
+.actions-row{display:grid;grid-template-columns:auto 1fr;gap:10px}
+.actions-row .btn{min-height:46px;padding:10px 16px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:15.5px;min-height:46px;padding:10px 18px;width:100%}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed}
+.btn.danger{color:var(--neg);border-color:var(--neg)}
+.btn.danger.arm{background:var(--neg-soft);font-weight:700}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.hint.err{color:var(--neg)}
+.check{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);padding:8px 11px;background:var(--surface-2);border-radius:var(--radius-sm)}
+.check.bad{color:var(--neg);background:var(--neg-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* settlement */
+.transfers{display:grid;grid-template-columns:max-content max-content 1fr auto;gap:10px 0}
+.transfer .repay{white-space:nowrap;justify-self:end}
+.repayform{grid-column:1 / -1;margin-top:-4px;padding:12px 14px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);background:var(--surface);display:grid;gap:10px}
+.repayform .title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.repayform .title .dot{width:10px;height:10px;border-radius:50%}
+.repayform .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.repayform .grid2{grid-template-columns:1fr}}
+.row .chip.repay{--pc:var(--pos);--pc-soft:var(--pos-soft)}
+.transfers .settled{grid-column:1 / -1}
+.transfer{grid-column:1 / -1;display:grid;grid-template-columns:subgrid;align-items:center;column-gap:28px;row-gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2)}
+.transfer .who{display:flex;align-items:center;gap:8px;font-weight:700;min-width:0}
+.transfer .who .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.transfer .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.transfer .to{display:flex;align-items:center;gap:8px;min-width:0}
+.transfer .arrow{color:var(--muted);display:flex;align-items:center;gap:4px;font-size:12px;flex:none}
+.transfer .amt{font-size:20px;font-weight:500;text-align:left;white-space:nowrap}
+@media (max-width:480px){.transfers{grid-template-columns:max-content 1fr auto}.transfer .amt{grid-column:1 / 3;font-size:22px}.transfer .repay{grid-row:span 2;align-self:center}}
+.settled{padding:16px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);color:var(--muted);text-align:center}
+.balances{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}
+.bal{padding:12px;border-radius:var(--radius-sm);border:1px solid var(--line);border-top:3px solid var(--pc)}
+.bal .name{display:flex;align-items:center;gap:6px;font-weight:700;min-width:0}
+.bal .name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bal .name .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.bal dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px}
+.bal dt{color:var(--muted)}.bal dd{margin:0;text-align:right}
+.bal .net{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.bal .net b{font-size:17px;font-weight:500}
+.bal .net .pill{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.bal.pos .net b{color:var(--pos)}.bal.pos .net .pill{background:var(--pos-soft);color:var(--pos)}
+.bal.neg .net b{color:var(--neg)}.bal.neg .net .pill{background:var(--neg-soft);color:var(--neg)}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.total b{font-size:15px;color:var(--ink);font-weight:500}
+
+/* ledger */
+.ledger{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:6px 14px;padding:13px 18px;border-top:1px solid var(--line);align-items:start}
+.row:first-child{border-top:0}
+.row .when{font-size:12px;color:var(--muted);white-space:nowrap;padding-top:3px;min-width:88px}
+.row .when b{display:block;font-weight:500;color:var(--ink);font-size:13px}
+.row .main{min-width:0}
+.row .note{font-weight:500;overflow-wrap:anywhere}
+.row .note.none{color:var(--muted);font-weight:400}
+.row.editing{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.row .edit{border:0;background:transparent;color:var(--muted);padding:2px 6px;font-size:12.5px;border-radius:6px}
+.row .edit:hover{color:var(--accent);background:var(--accent-soft)}
+.editbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 18px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;border-bottom:1px solid var(--line)}
+.row .meta{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:5px;font-size:12px;color:var(--muted);align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 5px;border-radius:999px;font-size:12px;font-weight:500;background:var(--pc-soft);color:var(--pc)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.row .amt{text-align:right;white-space:nowrap}
+.row .amt .big{font-size:17px;font-weight:500}
+.row .amt .conv{display:block;font-size:12px;color:var(--muted)}
+.row .actions{grid-column:3;display:flex;justify-content:flex-end;gap:6px}
+.row .del{border:0;background:transparent;color:var(--muted);padding:2px 6px;font-size:12.5px;border-radius:6px}
+.row .del:hover{color:var(--neg);background:var(--neg-soft)}
+.row .del.arm{color:var(--neg);background:var(--neg-soft);font-weight:500}
+@media (max-width:560px){.row{grid-template-columns:1fr auto}.row .when{grid-column:1 / -1;min-width:0;padding-top:0}.row .actions{grid-column:2}}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
+.banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:9px 18px;background:var(--p1-soft);color:var(--p1);font-size:12.5px;border-bottom:1px solid var(--line)}
+.banner .btn{border-color:currentColor;color:inherit;background:transparent}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13.5px;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:var(--shadow);z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="6" cy="7" r="3.2" fill="#6C95F0"/><circle cx="16" cy="7" r="3.2" fill="#F0A25A"/><circle cx="11" cy="15.5" r="3.2" fill="#B08CF5"/></svg>
+      </div>
+      <div class="brandtext">
+        <h1>三人分帳簿</h1>
+        <span class="status" id="status"><span class="led"></span><span id="status-text">連線中…</span></span>
+      </div>
+      <button type="button" class="iconbtn" id="theme-btn" title="切換外觀"><span id="theme-icon"></span><span id="theme-label">自動</span></button>
+    </div>
+    <div class="members" id="members"></div>
+    <div class="projpanel card" id="projpanel" hidden>
+      <div class="head"><h2>專案</h2><span class="eyebrow" id="proj-count"></span></div>
+      <div class="body stack" style="gap:14px">
+        <div class="field">
+          <label for="proj-new-name">新增專案</label>
+          <div class="actions-row" style="grid-template-columns:1fr auto">
+            <input id="proj-new-name" class="input" type="text" maxlength="20" placeholder="例：東京五日遊、家庭開銷">
+            <button type="button" class="btn primary" id="proj-create" style="min-height:40px;font-size:14.5px;width:auto">建立並切換</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="lbl">切換專案（點一下即切換）</span>
+          <div class="projlist" id="projlist"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end"><button type="button" class="btn sm" id="proj-close">關閉</button></div>
+      </div>
+    </div>
+    <div class="namepanel card" id="namepanel" hidden>
+      <div class="head"><h2>修改成員名字</h2><span class="eyebrow">最多 12 字</span></div>
+      <div class="body">
+        <div class="namefields" id="namefields"></div>
+        <p class="hint">改名後，所有紀錄與結算會一起更新。</p>
+        <div class="actions-row" style="margin-top:12px">
+          <button type="button" class="btn" id="name-cancel">取消</button>
+          <button type="button" class="btn primary" id="name-save">儲存名字</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="分頁" id="tabs">
+    <button type="button" role="tab" data-tab="add" aria-selected="true" id="tab-add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>新增</button>
+    <button type="button" role="tab" data-tab="settle" aria-selected="false" id="tab-settle"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h12M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>結算</button>
+    <button type="button" role="tab" data-tab="ledger" aria-selected="false" id="tab-ledger"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>紀錄<span class="badge" id="tab-count" hidden></span></button>
+    <button type="button" role="tab" data-tab="sync" aria-selected="false" id="tab-sync"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8M5 7l3 3 3-3M3 12v2h10v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>備份</button>
+  </nav>
+
+  <div class="panels">
+    <section class="card panel" data-panel="add" role="tabpanel" aria-labelledby="tab-add">
+      <div class="head" style="align-items:flex-start">
+        <div style="min-width:0;flex:1">
+          <h2 id="f-title">新增一筆消費</h2>
+          <div class="projline">
+            <span class="projname" title="目前專案"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 013.5 3h3l1.5 1.5h4.5A1.5 1.5 0 0114 6v6.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5v-8z" stroke="currentColor" stroke-width="1.5"/></svg><span id="proj-name"></span></span>
+            <button type="button" class="btn sm" id="proj-switch">切換</button>
+            <button type="button" class="btn sm danger" id="proj-del">刪除</button>
+          </div>
+        </div>
+        <span class="eyebrow" id="f-cur-label">TWD</span>
+      </div>
+      <div class="editbar" id="f-editbar" hidden><span>正在編輯 <b id="f-edit-desc"></b>，修改後按「更新這筆」。</span></div>
+      <div class="body">
+        <form id="form" class="form" novalidate>
+          <div class="field">
+            <label for="f-time">日期／時間</label>
+            <input id="f-time" class="input" type="datetime-local">
+          </div>
+          <div class="field">
+            <span class="lbl" id="cur-lbl">幣別</span>
+            <div class="seg wide" role="group" aria-labelledby="cur-lbl" id="f-cur">
+              <button type="button" data-cur="TWD" aria-pressed="true">NT$ 台幣</button>
+              <button type="button" data-cur="JPY" aria-pressed="false">¥ 日幣</button>
+            </div>
+          </div>
+          <div class="field span">
+            <span class="lbl" id="payer-lbl">誰買單</span>
+            <div class="seg wide pay" role="group" aria-labelledby="payer-lbl" id="f-payer"></div>
+          </div>
+          <div class="field span">
+            <label for="f-total">總金額</label>
+            <div class="amount"><span class="unit" id="f-unit">NT$</span><input id="f-total" class="input num" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+          </div>
+          <div class="field span">
+            <div class="sharehead">
+              <span class="lbl">各人份額 <span style="font-weight:400">（買單者 = 總金額 − 其他人）</span></span>
+              <button type="button" class="btn sm" id="f-even">平均分</button>
+            </div>
+            <div class="shares" id="f-shares"></div>
+            <div class="check" id="f-check"></div>
+          </div>
+          <div class="field span" id="f-rate-wrap">
+            <label for="f-rate">本筆匯率 <span style="font-weight:400">（1 JPY = ? TWD，儲存時會同步更新「結算」頁的目前匯率）</span></label>
+            <div class="amount"><span class="unit">TWD</span><input id="f-rate" class="input num" type="number" inputmode="decimal" min="0.0001" step="0.001" placeholder="0.21"></div>
+          </div>
+          <div class="field span">
+            <label for="f-note">附註</label>
+            <input id="f-note" class="input" type="text" maxlength="120" placeholder="例：晚餐、車票、住宿…">
+          </div>
+          <div class="field span">
+            <div class="actions-row">
+              <button type="button" class="btn" id="f-clear">清除重填</button>
+              <button type="submit" class="btn primary" id="f-save">儲存這筆</button>
+            </div>
+            <p class="hint err" id="f-err" hidden></p>
+          </div>
+        </form>
+      </div>
+    </section>
+    <section class="card panel" data-panel="settle" role="tabpanel" aria-labelledby="tab-settle" hidden>
+      <div class="head">
+          <h2>結算結果<span class="projtag" id="proj-name-2"></span></h2>
+          <div class="seg" role="group" aria-label="結算顯示幣別" id="d-cur">
+            <button type="button" data-cur="TWD" aria-pressed="true">NT$</button>
+            <button type="button" data-cur="JPY" aria-pressed="false">¥</button>
+          </div>
+        </div>
+        <div class="ratebar"><label class="rate">目前匯率 1 JPY = <input id="rate" class="num" type="number" step="0.001" min="0.0001" inputmode="decimal" aria-label="1 日幣等於多少新台幣"> TWD</label></div>
+        <div class="body">
+          <div class="transfers" id="transfers"></div>
+          <div class="balances" id="balances"></div>
+          <div class="total" id="total"></div>
+        </div>
+    </section>
+    <section class="card panel" data-panel="ledger" role="tabpanel" aria-labelledby="tab-ledger" hidden>
+      <div class="head"><h2>消費紀錄<span class="projtag" id="proj-name-3"></span></h2><span class="eyebrow" id="count"></span></div>
+        <div class="banner" id="sample-banner" hidden>
+          <span>以下為範例資料，儲存第一筆後會自動移除。</span>
+          <button type="button" class="btn sm" id="clear-samples">立即清除範例</button>
+        </div>
+        <div class="ledger" id="ledger"></div>
+    </section>
+    <section class="card panel" data-panel="sync" role="tabpanel" aria-labelledby="tab-sync" hidden>
+      <div class="head"><h2>備份與同步</h2><span class="eyebrow">存在這台裝置</span></div>
+      <div class="body stack" style="gap:22px">
+        <p class="hint" style="font-size:13.5px;line-height:1.6">這個版本的資料只存在你目前這台裝置的瀏覽器裡，不需要登入、任何人都能開。要換手機、或讓另外兩位看到同一份帳，把「備份碼」傳給對方（LINE、訊息都可以），對方在自己的頁面貼上匯入即可。備份碼以「目前專案」為單位，匯入時會自動對應到同一個專案。</p>
+
+        <div class="field">
+          <div class="sharehead"><span class="lbl">分享結算摘要</span></div>
+          <p class="hint">產生一段純文字的結算結果，直接傳到群組。</p>
+          <button type="button" class="btn" id="share-summary" style="min-height:44px">分享結算摘要文字</button>
+        </div>
+
+        <div class="field">
+          <div class="sharehead"><span class="lbl">匯出備份碼</span><span class="eyebrow" id="backup-meta"></span></div>
+          <textarea id="backup-out" class="input num" rows="4" readonly spellcheck="false" style="font-size:12px;resize:vertical;word-break:break-all" placeholder="按下方按鈕產生備份碼"></textarea>
+          <div class="actions-row" style="grid-template-columns:1fr 1fr">
+            <button type="button" class="btn" id="backup-make" style="min-height:44px">產生備份碼</button>
+            <button type="button" class="btn primary" id="backup-share" style="min-height:44px;font-size:15px">複製／分享</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="sharehead"><span class="lbl">匯入備份碼</span></div>
+          <textarea id="backup-in" class="input num" rows="4" spellcheck="false" style="font-size:12px;resize:vertical;word-break:break-all" placeholder="貼上別人傳來的備份碼（SB1. 開頭）"></textarea>
+          <div class="check" id="backup-preview" hidden></div>
+          <div class="actions-row" style="grid-template-columns:1fr 1fr">
+            <button type="button" class="btn" id="backup-merge" style="min-height:44px">合併匯入</button>
+            <button type="button" class="btn danger" id="backup-replace" style="min-height:44px">覆蓋匯入</button>
+          </div>
+          <p class="hint">「合併」會保留這台裝置已有的紀錄，同一筆以較新的為準；「覆蓋」會整份換成對方的資料（含名字與匯率）。</p>
+        </div>
+
+        <div class="field">
+          <div class="sharehead"><span class="lbl">清空目前專案</span></div>
+          <button type="button" class="btn danger" id="wipe-all" style="min-height:44px">清空目前專案的所有紀錄</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, el=document) => el.querySelector(s);
+  const PCOLORS = ['var(--p0)','var(--p1)','var(--p2)'];
+  const PSOFT = ['var(--p0-soft)','var(--p1-soft)','var(--p2-soft)'];
+  const SYM = {TWD:'NT$', JPY:'¥'};
+  const LS_KEY = 'splitbook.v1';
+
+  // ---------- state ----------
+  const state = {
+    names: ['A','B','C'],
+    rate: 0.21,                 // 1 JPY = rate TWD
+    expenses: [],               // {id, ts, payer, cur, total, shares:[3], note}
+    display: 'TWD',
+    hideSamples: false,
+    loaded: false,
+    tab: 'add',
+    theme: 'auto',
+    projects: [],               // {id, name, names[3], rate, createdAt}
+    pid: null,                  // current project id
+    all: [],                    // every expense across projects (each has pid)
+  };
+  const form = { cur:'TWD', payer:0 };
+  let editingId = null;
+  let editingKind = null;
+
+  const SAMPLES = [
+    {id:'s1', ts:'2026-09-19T12:30', payer:0, cur:'TWD', total:900, shares:[300,300,300], note:'午餐（範例）'},
+    {id:'s2', ts:'2026-09-19T18:05', payer:1, cur:'JPY', total:6000, shares:[2000,2000,2000], note:'居酒屋（範例）'},
+    {id:'s3', ts:'2026-09-20T09:40', payer:2, cur:'TWD', total:1200, shares:[600,0,600], note:'計程車，B 沒搭（範例）'},
+  ];
+
+  // ---------- helpers ----------
+  const pad = n => String(n).padStart(2,'0');
+  function nowLocal(){
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fmtWhen(ts){
+    const d = new Date(ts);
+    if (isNaN(d)) return {date: ts, time: ''};
+    const wd = ['日','一','二','三','四','五','六'][d.getDay()];
+    return {date: `${d.getMonth()+1}/${d.getDate()}（${wd}）`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+  }
+  function conv(amount, from, to, rate){
+    if (from === to) return amount;
+    const r = rate > 0 ? rate : state.rate;
+    if (from === 'JPY' && to === 'TWD') return amount * r;
+    return amount / r; // TWD -> JPY
+  }
+  function money(v, cur){
+    const r = Math.round(v);
+    return SYM[cur] + ' ' + Math.abs(r).toLocaleString('en-US') ;
+  }
+  function moneySigned(v, cur){
+    const r = Math.round(v);
+    return (r < 0 ? '−' : r > 0 ? '+' : '') + money(r, cur);
+  }
+  function toast(msg){
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  const usingSamples = () => !state.all.length && !state.hideSamples;
+  function visibleExpenses(){
+    if (state.expenses.length) return state.expenses;
+    return usingSamples() ? SAMPLES : [];
+  }
+
+  // ---------- projects ----------
+  const sortDesc = arr => arr.sort((a,b)=> a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0);
+  function currentProject(){ return state.projects.find(p => p.id === state.pid) || null; }
+  function syncCurrent(){
+    if (!currentProject()){ if (!state.projects.length) newProject('預設專案'); state.pid = state.projects[0].id; }
+    const p = currentProject();
+    state.names = p.names; state.rate = p.rate;
+    state.expenses = sortDesc(state.all.filter(e => e.pid === state.pid));
+  }
+  function newProject(name, id){
+    const p = { id: id || uid(), name: String(name || '新專案').trim().slice(0,20) || '新專案', names:['A','B','C'], rate:0.21, createdAt: Date.now() };
+    state.projects.push(p); return p;
+  }
+  function refreshAfterProjectChange(){
+    syncCurrent();
+    if (editingId){ editingKind = null; setEditMode(null); resetForm(); }
+    closeRepayForm();
+    renderMembers(); renderPayer(); renderShares(); renderCur(); renderProject(); renderAll();
+  }
+  function switchProject(pid){
+    if (!state.projects.some(p => p.id === pid) || pid === state.pid) return;
+    state.pid = pid; refreshAfterProjectChange(); writeLocal();
+    toast(`已切換到「${currentProject().name}」`);
+  }
+  function createProject(name){
+    const p = newProject(name); state.pid = p.id; state.hideSamples = true; writePrefs();
+    refreshAfterProjectChange(); writeLocal(); return p;
+  }
+  function deleteCurrentProject(){
+    const p = currentProject(); if (!p) return;
+    state.all = state.all.filter(e => e.pid !== p.id);
+    state.projects = state.projects.filter(x => x.id !== p.id);
+    if (!state.projects.length) newProject('預設專案');
+    state.pid = state.projects[0].id;
+    refreshAfterProjectChange(); writeLocal();
+    toast(`已刪除「${p.name}」`);
+  }
+  function renderProject(){
+    const p = currentProject(); if (!p) return;
+    ['#proj-name','#proj-name-2','#proj-name-3'].forEach(sel => { const el = $(sel); if (el) el.textContent = p.name; });
+    $('#proj-count').textContent = `${state.projects.length} 個專案`;
+    $('#projlist').innerHTML = state.projects.map(x => {
+      const n = state.all.filter(e => e.pid === x.id).length;
+      const d = new Date(x.createdAt || 0);
+      return `<button type="button" class="projitem${x.id === state.pid ? ' cur' : ''}" data-pid="${esc(x.id)}">
+        <b>${esc(x.name)}${x.id === state.pid ? '<span class="projtag">目前</span>' : ''}</b>
+        <small>${n} 筆・${x.createdAt ? `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}` : ''}</small>
+      </button>`;
+    }).join('');
+  }
+  function openProjPanel(focusNew){
+    closeNamePanel(); renderProject(); $('#projpanel').hidden = false;
+    if (focusNew){ $('#proj-new-name').focus(); }
+    $('#projpanel').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  function closeProjPanel(){ $('#projpanel').hidden = true; }
+
+  // ---------- theme ----------
+  function applyTheme(mode, fromUser){
+    state.theme = mode;
+    const root = document.documentElement;
+    if (mode === 'light' || mode === 'dark') root.setAttribute('data-theme', mode);
+    else if (fromUser) root.removeAttribute('data-theme');
+    const icon = { auto: '◐', light: '☀', dark: '☾' }[mode];
+    const label = { auto: '自動', light: '淺色', dark: '深色' }[mode];
+    $('#theme-icon').textContent = icon; $('#theme-label').textContent = label;
+    $('#theme-btn').title = `外觀：${label}（點一下切換）`;
+  }
+
+  // ---------- storage (on this device) ----------
+  function readLocal(){
+    try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+  }
+  function writeLocal(){
+    try {
+      const p = currentProject(); if (p){ p.names = state.names; p.rate = state.rate; }
+      localStorage.setItem(LS_KEY, JSON.stringify({v:2, projects: state.projects, pid: state.pid, expenses: state.all, savedAt: Date.now()}));
+      setStatus(true, '已儲存在此裝置');
+      return true;
+    } catch(e){ setStatus(false, '無法儲存：瀏覽器空間或權限被限制'); return false; }
+  }
+  function writePrefs(){
+    try { localStorage.setItem(LS_KEY+'.prefs', JSON.stringify({display:state.display, hideSamples:state.hideSamples, tab:state.tab, theme:state.theme})); } catch(e){}
+  }
+  function readPrefs(){
+    try { const raw = localStorage.getItem(LS_KEY+'.prefs'); return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+  }
+  async function saveSettings(){
+    if (writeLocal()) toast('已儲存'); else toast('儲存失敗，請匯出備份碼以免資料遺失');
+  }
+  async function saveExpense(e){
+    e.updatedAt = Date.now(); e.pid = state.pid;
+    state.all = state.all.filter(x => x.id !== e.id);
+    state.all.unshift(e);
+    syncCurrent();
+    if (!writeLocal()) throw {code:'storage'};
+    renderProject(); renderAll();
+  }
+  async function deleteExpense(id){
+    state.all = state.all.filter(x => x.id !== id);
+    syncCurrent(); writeLocal(); renderProject(); renderAll();
+  }
+
+  // ---------- backup code (share between phones) ----------
+  const B64 = {
+    enc(str){ const bytes = new TextEncoder().encode(str); let bin=''; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); },
+    dec(b64){ b64 = b64.replace(/-/g,'+').replace(/_/g,'/'); while (b64.length % 4) b64 += '='; const bin = atob(b64); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(bytes); }
+  };
+  function makeBackupCode(){
+    const p = currentProject();
+    const payload = { v:2, project: { id: p.id, name: p.name }, names: state.names, rate: state.rate, expenses: state.expenses.map(e => { const c = Object.assign({}, e); delete c.pid; return c; }), at: Date.now() };
+    return 'SB1.' + B64.enc(JSON.stringify(payload));
+  }
+  function parseBackupCode(text){
+    const m = String(text || '').trim().match(/SB1\.([A-Za-z0-9_-]+)/);
+    if (!m) throw new Error('format');
+    const data = JSON.parse(B64.dec(m[1]));
+    if (!data || !Array.isArray(data.expenses)) throw new Error('format');
+    if (data.project && typeof data.project === 'object'){ data.project = { id: String(data.project.id || '').replace(/[^A-Za-z0-9_-]/g,'').slice(0,40) || uid(), name: String(data.project.name || '匯入的專案').slice(0,20) }; } else data.project = null;
+    data.expenses = data.expenses.filter(e => e && e.id && e.total > 0 && Array.isArray(e.shares) && e.shares.length === 3 && (e.payer === 0 || e.payer === 1 || e.payer === 2) && (e.cur === 'TWD' || e.cur === 'JPY'))
+      .map(e => ({ id:String(e.id), ts:String(e.ts||''), payer:e.payer, cur:e.cur, total:+e.total, shares:e.shares.map(x => +x || 0), rate: +e.rate || 0, note: String(e.note||'').slice(0,120), updatedAt: +e.updatedAt || 0, kind: e.kind === 'repay' ? 'repay' : undefined }));
+    return data;
+  }
+  function importBackup(data, mode){
+    // which project does this backup belong to?
+    let pid = state.pid, created = false;
+    if (data.project){
+      let p = state.projects.find(x => x.id === data.project.id);
+      if (!p){ p = newProject(data.project.name, data.project.id); created = true; }
+      pid = p.id;
+    }
+    const proj = state.projects.find(x => x.id === pid);
+    const others = state.all.filter(e => e.pid !== pid);
+    let slice = state.all.filter(e => e.pid === pid);
+    const incoming = data.expenses.map(e => Object.assign({}, e, {pid}));
+    if (mode === 'replace'){
+      slice = incoming;
+    } else {
+      const map = new Map(slice.map(e => [e.id, e]));
+      for (const e of incoming){
+        const cur = map.get(e.id);
+        if (!cur || (e.updatedAt || 0) >= (cur.updatedAt || 0)) map.set(e.id, e);
+      }
+      slice = [...map.values()];
+    }
+    state.all = others.concat(slice);
+    if (Array.isArray(data.names) && data.names.length === 3 && (mode === 'replace' || created)) proj.names = data.names.map(n => String(n).slice(0,12));
+    if (data.rate > 0 && (mode === 'replace' || created)) proj.rate = data.rate;
+    state.pid = pid;
+    state.hideSamples = true; writePrefs();
+    refreshAfterProjectChange(); writeLocal();
+    return { pid, created, name: proj.name };
+  }
+  function summaryText(){
+    const cur = state.display;
+    const list = state.expenses;
+    const r = settle(list, cur);
+    const lines = [`【三人分帳結算・${currentProject().name}】${new Date().toLocaleDateString('zh-TW')}`, `共 ${r.nExp} 筆消費，合計 ${money(r.total, cur)}${r.nRepay ? `；已清償 ${r.nRepay} 筆 ${money(r.repaid, cur)}` : ''}`, ''];
+    if (!r.transfers.length) lines.push('已經平了，沒有人需要付錢。');
+    r.transfers.forEach(t => lines.push(`${state.names[t.from]} → ${state.names[t.to]}：${money(t.amt, cur)}`));
+    lines.push('');
+    state.names.forEach((n,i) => lines.push(`${n}：已付 ${money(r.paid[i], cur)}／應分擔 ${money(r.owed[i], cur)}／${r.net[i] >= 0 ? '應收' : '應付'} ${money(Math.abs(r.net[i]), cur)}`));
+    return lines.join('\n');
+  }
+  async function copyText(text, okMsg){
+    if (window.AndroidBridge && AndroidBridge.copy){ try { AndroidBridge.copy(text); toast(okMsg); return true; } catch(e){} }
+    try { await navigator.clipboard.writeText(text); toast(okMsg); return true; }
+    catch(e){ toast('無法自動複製，請長按文字框手動複製'); return false; }
+  }
+  async function shareText(text, title){
+    if (window.AndroidBridge && AndroidBridge.share){ try { AndroidBridge.share(title, text); return true; } catch(e){} }
+    if (navigator.share){
+      try { await navigator.share({ title, text }); return true; } catch(e){ if (e && e.name === 'AbortError') return true; }
+    }
+    return copyText(text, '已複製，可貼到 LINE 或訊息');
+  }
+
+  // ---------- settlement ----------
+  function settle(list, cur){
+    const paid=[0,0,0], owed=[0,0,0];
+    let total = 0;
+    let repaid = 0, nExp = 0, nRepay = 0;
+    for (const e of list){
+      const t = conv(e.total, e.cur, cur, e.rate);
+      paid[e.payer] += t;
+      if (e.kind === 'repay'){ repaid += t; nRepay++; } else { total += t; nExp++; }
+      e.shares.forEach((s,i)=> owed[i] += conv(s, e.cur, cur, e.rate));
+    }
+    const net = paid.map((p,i)=> p - owed[i]); // + means others owe this person
+    // greedy: debtors pay creditors
+    const debtors = [], creditors = [];
+    net.forEach((n,i)=>{ const r = Math.round(n); if (r < 0) debtors.push({i, amt:-r}); else if (r > 0) creditors.push({i, amt:r}); });
+    debtors.sort((a,b)=>b.amt-a.amt); creditors.sort((a,b)=>b.amt-a.amt);
+    const transfers = [];
+    let di=0, ci=0;
+    while (di < debtors.length && ci < creditors.length){
+      const d = debtors[di], c = creditors[ci];
+      const x = Math.min(d.amt, c.amt);
+      if (x > 0) transfers.push({from:d.i, to:c.i, amt:x});
+      d.amt -= x; c.amt -= x;
+      if (d.amt <= 0) di++;
+      if (c.amt <= 0) ci++;
+    }
+    return {paid, owed, net, total, transfers, repaid, nExp, nRepay};
+  }
+
+  // ---------- render ----------
+  function renderMembers(){
+    $('#members').innerHTML = state.names.map((n,i)=>`
+      <button type="button" class="member" data-rename style="--pc:${PCOLORS[i]}" title="修改名字">
+        <span class="dot" style="background:${PCOLORS[i]}"></span><span style="font-weight:500">${esc(n)}</span>
+      </button>`).join('') + `
+      <button type="button" class="member btn-like" id="rename-btn" data-rename>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>改名字
+      </button>
+      <button type="button" class="member btn-like" id="proj-new" style="--pc:var(--p1)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>新增專案
+      </button>`;
+    $('#rate').value = state.rate;
+  }
+  function openNamePanel(focusIndex){
+    closeProjPanel();
+    $('#namefields').innerHTML = state.names.map((n,i)=>`
+      <label class="namefield">
+        <span class="dot" style="background:${PCOLORS[i]}"></span>
+        <input id="name-${i}" class="input" value="${esc(n)}" maxlength="12" placeholder="成員 ${i+1}" aria-label="成員 ${i+1} 名字">
+      </label>`).join('');
+    $('#namepanel').hidden = false;
+    const target = $(`#name-${focusIndex ?? 0}`);
+    target.focus(); target.select();
+  }
+  function closeNamePanel(){ $('#namepanel').hidden = true; }
+  async function saveNames(){
+    const next = [0,1,2].map(i => ($(`#name-${i}`).value.trim() || ['A','B','C'][i]).slice(0,12));
+    const dup = next.some((n,i) => next.indexOf(n) !== i);
+    if (dup){ toast('名字不能重複'); return; }
+    state.names = next;
+    closeNamePanel();
+    renderMembers(); renderPayer(); renderShares(); renderAll();
+    await saveSettings();
+  }
+  function renderPayer(){
+    $('#f-payer').innerHTML = state.names.map((n,i)=>`<button type="button" data-i="${i}" style="--pc:${PCOLORS[i]}" aria-pressed="${form.payer===i}">${esc(n)}</button>`).join('');
+  }
+  function renderShares(){
+    const wrap = $('#f-shares');
+    const prev = [0,1,2].map(i => { const el = $(`#f-share-${i}`); return el ? el.value : ''; });
+    wrap.innerHTML = state.names.map((n,i)=>`
+      <div class="share">
+        <span class="who"><span class="dot" style="background:${PCOLORS[i]}"></span>${esc(n)}${form.payer===i?' <small>買單</small>':''}</span>
+        <div class="amount"><span class="unit">${SYM[form.cur]}</span>
+          <input id="f-share-${i}" class="input num" type="number" inputmode="decimal" min="0" step="any" placeholder="0" data-i="${i}" ${form.payer===i?'readonly tabindex="-1"':''} value="${form.payer===i?'':esc(prev[i])}"></div>
+      </div>`).join('');
+    updateRemainder();
+  }
+  function numVal(id){ const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+  function updateRemainder(){
+    const total = numVal('#f-total');
+    let others = 0;
+    [0,1,2].forEach(i => { if (i !== form.payer) others += numVal(`#f-share-${i}`); });
+    const rem = total - others;
+    const payerEl = $(`#f-share-${form.payer}`);
+    payerEl.value = total || others ? (Math.round(rem*100)/100) : '';
+    const chk = $('#f-check');
+    if (rem < -0.004){
+      chk.className = 'check bad';
+      chk.innerHTML = `<span>其他人的份額超過總金額</span><span class="num">超出 ${money(-rem, form.cur)}</span>`;
+    } else {
+      chk.className = 'check';
+      chk.innerHTML = `<span>${esc(state.names[form.payer])} 自己的份額</span><span class="num">${money(Math.max(rem,0), form.cur)}</span>`;
+    }
+  }
+  function renderCur(){
+    $('#f-cur').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cur === form.cur)));
+    $('#f-unit').textContent = SYM[form.cur];
+    $('#f-cur-label').textContent = form.cur === 'TWD' ? '新台幣 TWD' : '日幣 JPY';
+    $('#f-shares').querySelectorAll('.unit').forEach(u => u.textContent = SYM[form.cur]);
+    $('#f-rate-wrap').hidden = form.cur !== 'JPY';
+    if (form.cur === 'JPY' && !$('#f-rate').value) $('#f-rate').value = state.rate;
+    updateRemainder();
+  }
+  function resetForm(){
+    $('#f-total').value = ''; $('#f-note').value = '';
+    [0,1,2].forEach(i => { $(`#f-share-${i}`).value = ''; });
+    $('#f-time').value = nowLocal();
+    $('#f-rate').value = state.rate;
+    updateRemainder(); showErr('');
+  }
+  function setEditMode(e){
+    editingId = e ? e.id : null;
+    $('#f-title').textContent = e ? '編輯消費紀錄' : '新增一筆消費';
+    $('#f-editbar').hidden = !e;
+    $('#f-save').textContent = e ? '更新這筆' : '儲存這筆';
+    $('#f-clear').textContent = e ? '取消編輯' : '清除重填';
+    if (e){
+      const w = fmtWhen(e.ts);
+      $('#f-edit-desc').textContent = `${w.date} ${w.time}${e.note ? '「' + e.note + '」' : ''} ${money(e.total, e.cur)}`;
+    }
+    renderLedger();
+  }
+  function startEdit(e){
+    editingKind = e.kind || null;
+    form.cur = e.cur; form.payer = e.payer;
+    renderPayer(); renderShares();
+    $('#f-time').value = e.ts;
+    $('#f-total').value = e.total;
+    [0,1,2].forEach(i => { if (i !== form.payer) $(`#f-share-${i}`).value = e.shares[i] || ''; });
+    $('#f-rate').value = e.rate > 0 ? e.rate : state.rate;
+    $('#f-note').value = e.note || '';
+    renderCur(); showErr('');
+    setEditMode(e);
+    showTab('add');
+    window.scrollTo({top:0, behavior:'smooth'});
+    $('#f-total').focus();
+  }
+  function cancelEdit(){ editingKind = null; setEditMode(null); resetForm(); }
+  function renderSettlement(){
+    const cur = state.display;
+    $('#d-cur').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cur === cur)));
+    const list = visibleExpenses();
+    const r = settle(list, cur);
+    const tw = $('#transfers');
+    if (!list.length){
+      tw.innerHTML = `<div class="settled">還沒有任何紀錄，先在左側新增一筆。</div>`;
+    } else if (!r.transfers.length){
+      tw.innerHTML = `<div class="settled">已經平了，沒有人需要付錢。</div>`;
+    } else {
+      tw.innerHTML = r.transfers.map(t => `
+        <div class="transfer">
+          <span class="who"><span class="dot" style="background:${PCOLORS[t.from]}"></span><span>${esc(state.names[t.from])}</span></span>
+          <span class="to">
+            <span class="arrow">付給 <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M1 6h15M11 1l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="who"><span class="dot" style="background:${PCOLORS[t.to]}"></span><span>${esc(state.names[t.to])}</span></span>
+          </span>
+          <span class="amt num">${money(t.amt, cur)}</span>
+          <button type="button" class="btn sm repay" data-from="${t.from}" data-to="${t.to}" data-amt="${t.amt}">清償</button>
+        </div>`).join('');
+    }
+    $('#balances').innerHTML = state.names.map((n,i)=>{
+      const net = Math.round(r.net[i]);
+      const cls = net > 0 ? 'pos' : net < 0 ? 'neg' : '';
+      const label = net > 0 ? '應收回' : net < 0 ? '應付出' : '已平';
+      return `<div class="bal ${cls}" style="--pc:${PCOLORS[i]}">
+        <div class="name"><span class="dot" style="background:${PCOLORS[i]}"></span><span>${esc(n)}</span></div>
+        <dl><dt>已付</dt><dd class="num">${money(r.paid[i], cur)}</dd><dt>應分擔</dt><dd class="num">${money(r.owed[i], cur)}</dd></dl>
+        <div class="net"><span class="pill">${label}</span><b class="num">${moneySigned(net, cur)}</b></div>
+      </div>`;
+    }).join('');
+    $('#total').innerHTML = `<span>${r.nExp} 筆消費合計${usingSamples()?'（範例）':''}${r.nRepay ? `・已清償 ${r.nRepay} 筆 ${money(r.repaid, cur)}` : ''}</span><b class="num">${money(r.total, cur)}</b>`;
+  }
+  function renderLedger(){
+    const list = visibleExpenses();
+    const cur = state.display;
+    $('#sample-banner').hidden = !usingSamples();
+    $('#count').textContent = list.length ? `${list.length} 筆` : '';
+    const badge = $('#tab-count'); badge.hidden = !state.expenses.length; badge.textContent = state.expenses.length;
+    const box = $('#ledger');
+    if (!list.length){ box.innerHTML = `<div class="empty">尚無紀錄</div>`; return; }
+    box.innerHTML = list.map(e => {
+      const w = fmtWhen(e.ts);
+      const showConv = e.cur !== cur;
+      const shares = e.shares.map((s,i)=> s ? `${esc(state.names[i])} ${SYM[e.cur]}${Math.round(s).toLocaleString('en-US')}` : null).filter(Boolean).join('・');
+      const isRepay = e.kind === 'repay';
+      const toIdx = isRepay ? e.shares.findIndex(x => x > 0) : -1;
+      return `<div class="row${editingId === e.id ? ' editing' : ''}" data-id="${esc(e.id)}">
+        <div class="when"><b>${w.date}</b>${w.time}</div>
+        <div class="main">
+          <div class="note ${e.note?'':'none'}">${e.note ? esc(e.note) : '（無附註）'}</div>
+          <div class="meta">
+            ${isRepay
+              ? `<span class="chip repay"><span class="dot"></span>清償</span><span>${esc(state.names[e.payer])} → ${toIdx >= 0 ? esc(state.names[toIdx]) : '？'}</span>`
+              : `<span class="chip" style="--pc:${PCOLORS[e.payer]};--pc-soft:${PSOFT[e.payer]}"><span class="dot"></span>${esc(state.names[e.payer])} 買單</span><span class="num">${shares}</span>`}
+          </div>
+        </div>
+        <div class="amt">
+          <span class="big num">${money(e.total, e.cur)}</span>
+          ${showConv ? `<span class="conv num">≈ ${money(conv(e.total, e.cur, cur, e.rate), cur)} <span title="本筆匯率">@${e.rate > 0 ? e.rate : state.rate}</span></span>` : ''}
+        </div>
+        <div class="actions">${usingSamples() ? '' : `<button type="button" class="edit" data-id="${esc(e.id)}">編輯</button><button type="button" class="del" data-id="${esc(e.id)}">刪除</button>`}</div>
+      </div>`;
+    }).join('');
+  }
+  function renderAll(){ renderSettlement(); renderLedger(); }
+  function setStatus(on, text){
+    const s = $('#status'); s.classList.toggle('on', on); $('#status-text').textContent = text;
+  }
+
+  // ---------- events ----------
+  $('#f-cur').addEventListener('click', e => {
+    const b = e.target.closest('button[data-cur]'); if (!b) return;
+    form.cur = b.dataset.cur; renderCur();
+  });
+  $('#f-payer').addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]'); if (!b) return;
+    const next = +b.dataset.i;
+    if (next === form.payer) return;
+    // keep others' values; the new payer's field becomes derived
+    form.payer = next;
+    renderPayer(); renderShares();
+  });
+  $('#f-total').addEventListener('input', updateRemainder);
+  $('#f-shares').addEventListener('input', e => { if (e.target.matches('input')) updateRemainder(); });
+  $('#f-even').addEventListener('click', () => {
+    const total = numVal('#f-total');
+    if (!total){ showErr('先輸入總金額，再按平均分。'); $('#f-total').focus(); return; }
+    const each = Math.round(total / 3 * 100) / 100;
+    [0,1,2].forEach(i => { if (i !== form.payer) $(`#f-share-${i}`).value = each; });
+    updateRemainder(); showErr('');
+  });
+  function showErr(msg){ const el = $('#f-err'); el.textContent = msg; el.hidden = !msg; }
+
+  $('#form').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const total = numVal('#f-total');
+    if (!(total > 0)){ showErr('請輸入大於 0 的總金額。'); $('#f-total').focus(); return; }
+    const shares = [0,1,2].map(i => numVal(`#f-share-${i}`));
+    let others = 0; [0,1,2].forEach(i => { if (i !== form.payer) others += shares[i]; });
+    if (others - total > 0.004){ showErr('其他人的份額加起來超過總金額，請修正。'); return; }
+    if (shares.some(s => s < 0)){ showErr('份額不能是負數。'); return; }
+    shares[form.payer] = Math.round((total - others) * 100) / 100;
+    const ts = $('#f-time').value || nowLocal();
+    let rate = parseFloat($('#f-rate').value);
+    if (form.cur === 'JPY' && !(rate > 0)){ showErr('請輸入本筆匯率（1 JPY 等於多少 TWD）。'); $('#f-rate').focus(); return; }
+    if (!(rate > 0)) rate = state.rate;
+    const wasEditing = !!editingId;
+    const e = { id: editingId || uid(), ts, payer: form.payer, cur: form.cur, total, shares, rate, note: $('#f-note').value.trim() };
+    if (editingId && editingKind) e.kind = editingKind;
+    const btn = $('#f-save'); btn.disabled = true; btn.textContent = '儲存中…';
+    try {
+      await saveExpense(e);
+      // a freshly entered rate becomes the current default rate
+      if (rate !== state.rate){ state.rate = rate; $('#rate').value = rate; saveSettings(); renderAll(); }
+      showErr('');
+      toast(wasEditing ? '已更新這筆消費，結算已重新計算' : '已儲存，結算已重新計算');
+      setEditMode(null);
+      resetForm();
+      $('#f-total').focus();
+    } catch(err){
+      showErr(err && err.code === 'storage' ? '這個瀏覽器無法儲存資料（可能是私密瀏覽或空間被限制），請改用一般視窗。' : '儲存失敗，請再試一次。');
+    } finally { btn.disabled = false; btn.textContent = editingId ? '更新這筆' : '儲存這筆'; }
+  });
+
+  $('#members').addEventListener('click', e => {
+    const b = e.target.closest('[data-rename]'); if (!b) return;
+    const idx = [...$('#members').querySelectorAll('.member[data-rename]')].indexOf(b);
+    openNamePanel(idx >= 0 && idx < 3 ? idx : 0);
+  });
+  $('#name-cancel').addEventListener('click', closeNamePanel);
+  // projects
+  $('#members').addEventListener('click', e => { if (e.target.closest('#proj-new')) openProjPanel(true); });
+  $('#proj-switch').addEventListener('click', () => openProjPanel(false));
+  $('#proj-close').addEventListener('click', closeProjPanel);
+  $('#proj-create').addEventListener('click', () => {
+    const name = $('#proj-new-name').value.trim();
+    if (!name){ toast('請先輸入專案名稱'); $('#proj-new-name').focus(); return; }
+    if (state.projects.some(p => p.name === name)){ toast('已有同名專案'); return; }
+    $('#proj-new-name').value = '';
+    createProject(name); closeProjPanel(); showTab('add'); toast(`已建立並切換到「${name}」`);
+  });
+  $('#proj-new-name').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#proj-create').click(); } });
+  $('#projlist').addEventListener('click', e => {
+    const b = e.target.closest('[data-pid]'); if (!b) return;
+    switchProject(b.dataset.pid); closeProjPanel();
+  });
+  $('#proj-del').addEventListener('click', () => {
+    const b = $('#proj-del');
+    if (!b.classList.contains('arm')){
+      const n = state.expenses.length;
+      b.classList.add('arm'); b.textContent = n ? `確定刪除？含 ${n} 筆紀錄` : '確定刪除？';
+      clearTimeout(b._t); b._t = setTimeout(()=>{ b.classList.remove('arm'); b.textContent = "刪除"; }, 3500); return;
+    }
+    b.classList.remove("arm"); b.textContent = "刪除";
+    deleteCurrentProject();
+  });
+  // theme
+  $('#theme-btn').addEventListener('click', () => {
+    const next = { auto:'light', light:'dark', dark:'auto' }[state.theme] || 'auto';
+    applyTheme(next, true); writePrefs();
+  });
+  $('#name-save').addEventListener('click', saveNames);
+  $('#namefields').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); saveNames(); } if (e.key === 'Escape') closeNamePanel(); });
+  // ---------- tabs ----------
+  function showTab(name){
+    document.querySelectorAll('#tabs [role="tab"]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    document.querySelectorAll('.panel').forEach(p => p.hidden = p.dataset.panel !== name);
+    state.tab = name; writePrefs();
+  }
+  $('#tabs').addEventListener('click', e => {
+    const b = e.target.closest('[data-tab]'); if (!b) return;
+    showTab(b.dataset.tab);
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+  // ---------- 清償 (repayment) ----------
+  function openRepayForm(btn){
+    closeRepayForm();
+    const from = +btn.dataset.from, to = +btn.dataset.to, amt = Math.round(+btn.dataset.amt);
+    const cur = state.display;
+    const row = btn.closest('.transfer');
+    const f = document.createElement('div');
+    f.className = 'repayform'; f.id = 'repayform';
+    f.innerHTML = `
+      <div class="title"><span class="dot" style="background:${PCOLORS[from]}"></span>${esc(state.names[from])} 還錢給 <span class="dot" style="background:${PCOLORS[to]}"></span>${esc(state.names[to])}</div>
+      <div class="grid2">
+        <div class="field"><label for="rp-amt">實際還了多少</label>
+          <div class="amount"><span class="unit">${SYM[cur]}</span><input id="rp-amt" class="input num" type="number" inputmode="decimal" min="0" step="any" value="${amt}"></div></div>
+        <div class="field"><label for="rp-note">附註</label><input id="rp-note" class="input" type="text" maxlength="120" value="清償" placeholder="例：現金、轉帳"></div>
+      </div>
+      <div class="check" id="rp-check"><span>目前應付 ${money(amt, cur)}</span><span class="num" id="rp-rest">清償後剩 ${money(0, cur)}</span></div>
+      <div class="actions-row"><button type="button" class="btn" id="rp-cancel">取消</button><button type="button" class="btn primary" id="rp-ok" style="min-height:42px;font-size:15px">確認清償</button></div>`;
+    row.insertAdjacentElement('afterend', f);
+    const amtEl = $('#rp-amt');
+    const upd = () => {
+      const v = parseFloat(amtEl.value) || 0; const rest = amt - v; const chk = $('#rp-check');
+      if (rest < -0.5){ chk.className = 'check bad'; $('#rp-rest').textContent = `多還 ${money(-rest, cur)}，會變成對方欠回`; }
+      else { chk.className = 'check'; $('#rp-rest').textContent = rest > 0.5 ? `清償後剩 ${money(rest, cur)}` : '清償後兩人結清'; }
+    };
+    amtEl.addEventListener('input', upd);
+    $('#rp-cancel').addEventListener('click', closeRepayForm);
+    $('#rp-ok').addEventListener('click', async () => {
+      const v = parseFloat(amtEl.value);
+      if (!(v > 0)){ toast('請輸入大於 0 的金額'); amtEl.focus(); return; }
+      const shares = [0,0,0]; shares[to] = Math.round(v*100)/100;
+      const e = { id: uid(), ts: nowLocal(), payer: from, cur, total: shares[to], shares, rate: state.rate, note: ($('#rp-note').value.trim() || '清償'), kind: 'repay' };
+      const ok = $('#rp-ok'); ok.disabled = true; ok.textContent = '儲存中…';
+      try { await saveExpense(e); toast(`已記錄 ${state.names[from]} 還給 ${state.names[to]} ${money(v, cur)}`); }
+      catch(err){ toast('儲存失敗，請再試一次'); ok.disabled = false; ok.textContent = '確認清償'; return; }
+      closeRepayForm(); renderAll();
+    });
+    amtEl.focus(); amtEl.select();
+    f.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  function closeRepayForm(){ const f = $('#repayform'); if (f) f.remove(); }
+  $('#transfers').addEventListener('click', e => {
+    const b = e.target.closest('.repay'); if (!b) return;
+    if (usingSamples()){ toast('範例資料不能清償，先新增真實紀錄'); return; }
+    openRepayForm(b);
+  });
+
+  $('#f-clear').addEventListener('click', () => {
+    if (editingId){ cancelEdit(); toast('已取消編輯'); }
+    else { resetForm(); toast('已清除輸入'); }
+    $('#f-total').focus();
+  });
+  $('#rate').addEventListener('change', () => {
+    const v = parseFloat($('#rate').value);
+    if (!(v > 0)){ $('#rate').value = state.rate; return; }
+    state.rate = v; $('#f-rate').value = v; saveSettings(); renderAll();
+  });
+  $('#d-cur').addEventListener('click', e => {
+    const b = e.target.closest('button[data-cur]'); if (!b) return;
+    state.display = b.dataset.cur; writePrefs(); renderAll();
+  });
+  $('#clear-samples').addEventListener('click', () => { state.hideSamples = true; writePrefs(); renderAll(); });
+  $('#ledger').addEventListener('click', async e => {
+    const ed = e.target.closest('.edit');
+    if (ed){
+      const item = state.expenses.find(x => x.id === ed.dataset.id);
+      if (item) startEdit(item);
+      return;
+    }
+    const b = e.target.closest('.del'); if (!b) return;
+    if (!b.classList.contains('arm')){
+      b.classList.add('arm'); b.textContent = '確定刪除？';
+      clearTimeout(b._t); b._t = setTimeout(()=>{ b.classList.remove('arm'); b.textContent='刪除'; }, 3000);
+      return;
+    }
+    b.disabled = true;
+    try { await deleteExpense(b.dataset.id); toast('已刪除'); }
+    catch(err){ toast('刪除失敗，請再試一次'); b.disabled = false; }
+  });
+
+  // ---------- backup panel events ----------
+  $('#share-summary').addEventListener('click', () => {
+    if (!state.expenses.length){ toast('還沒有任何紀錄'); return; }
+    shareText(summaryText(), '三人分帳結算');
+  });
+  $('#backup-make').addEventListener('click', () => {
+    if (!state.expenses.length){ toast('還沒有任何紀錄可以備份'); return; }
+    const code = makeBackupCode();
+    $('#backup-out').value = code;
+    $('#backup-meta').textContent = `${state.expenses.length} 筆・${code.length} 字`;
+    toast('已產生備份碼');
+  });
+  $('#backup-share').addEventListener('click', () => {
+    if (!$('#backup-out').value){ $('#backup-make').click(); if (!$('#backup-out').value) return; }
+    shareText($('#backup-out').value, '三人分帳簿備份碼');
+  });
+  $('#backup-out').addEventListener('focus', e => e.target.select());
+  $('#backup-in').addEventListener('input', () => {
+    const box = $('#backup-preview');
+    const v = $('#backup-in').value.trim();
+    if (!v){ box.hidden = true; return; }
+    try {
+      const d = parseBackupCode(v);
+      box.className = 'check'; box.hidden = false;
+      const exists = d.project && state.projects.some(x => x.id === d.project.id);
+      box.innerHTML = `<span>${d.project ? `專案「${esc(d.project.name)}」${exists ? '（已存在，會合併到該專案）' : '（新專案）'}` : '舊版備份，匯入目前專案'}・${esc(d.names ? d.names.join('、') : '')}</span><span class="num">${d.expenses.length} 筆</span>`;
+    } catch(e){ box.className = 'check bad'; box.hidden = false; box.innerHTML = '<span>看不懂這段備份碼，請確認有完整貼上（SB1. 開頭）。</span>'; }
+  });
+  function doImport(mode){
+    let d;
+    try { d = parseBackupCode($('#backup-in').value); } catch(e){ toast('備份碼格式不正確'); return; }
+    const targetPid = d.project ? d.project.id : state.pid;
+    const before = state.all.filter(e => e.pid === targetPid).length;
+    const r = importBackup(d, mode);
+    $('#backup-in').value = ''; $('#backup-preview').hidden = true;
+    toast(mode === 'replace' ? `已覆蓋匯入「${r.name}」${state.expenses.length} 筆` : `已合併到「${r.name}」，新增 ${state.expenses.length - before} 筆，共 ${state.expenses.length} 筆`);
+    showTab('settle');
+  }
+  $('#backup-merge').addEventListener('click', () => doImport('merge'));
+  $('#backup-replace').addEventListener('click', () => {
+    const b = $('#backup-replace');
+    if (!b.classList.contains('arm')){ b.classList.add('arm'); b.textContent = '確定覆蓋？再按一次'; clearTimeout(b._t); b._t = setTimeout(()=>{ b.classList.remove('arm'); b.textContent = '覆蓋匯入'; }, 3000); return; }
+    b.classList.remove('arm'); b.textContent = '覆蓋匯入';
+    doImport('replace');
+  });
+  $('#wipe-all').addEventListener('click', () => {
+    const b = $('#wipe-all');
+    if (!b.classList.contains('arm')){ b.classList.add('arm'); b.textContent = '確定清空？再按一次（無法復原）'; clearTimeout(b._t); b._t = setTimeout(()=>{ b.classList.remove('arm'); b.textContent = '清空這台裝置的所有紀錄'; }, 3000); return; }
+    b.classList.remove('arm'); b.textContent = '清空這台裝置的所有紀錄';
+    state.all = state.all.filter(e => e.pid !== state.pid); state.hideSamples = true; writePrefs(); syncCurrent(); writeLocal(); renderProject(); renderAll(); toast('已清空目前專案的紀錄');
+  });
+
+  // ---------- boot ----------
+  function boot(){
+    const prefs = readPrefs();
+    if (prefs){ if (prefs.display) state.display = prefs.display; state.hideSamples = !!prefs.hideSamples; if (['add','settle','ledger','sync'].includes(prefs.tab)) state.tab = prefs.tab; if (['auto','light','dark'].includes(prefs.theme)) state.theme = prefs.theme; }
+    applyTheme(state.theme, false);
+    const local = readLocal();
+    if (local && local.v === 2 && Array.isArray(local.projects) && local.projects.length){
+      state.projects = local.projects.filter(p => p && p.id).map(p => ({ id:String(p.id), name:String(p.name||'專案').slice(0,20), names: (Array.isArray(p.names) && p.names.length === 3) ? p.names.map(String) : ['A','B','C'], rate: p.rate > 0 ? p.rate : 0.21, createdAt: +p.createdAt || 0 }));
+      state.all = Array.isArray(local.expenses) ? local.expenses.filter(e => e && e.id) : [];
+      state.pid = local.pid;
+    } else if (local){
+      // migrate v1 (single ledger) into a default project
+      const p = newProject('預設專案');
+      if (Array.isArray(local.names) && local.names.length === 3) p.names = local.names;
+      if (local.rate > 0) p.rate = local.rate;
+      state.all = (Array.isArray(local.expenses) ? local.expenses : []).map(e => Object.assign({}, e, {pid: p.id}));
+      state.pid = p.id;
+    } else {
+      state.pid = newProject('預設專案').id;
+    }
+    // any expense whose project vanished goes to the current project
+    syncCurrent();
+    const ids = new Set(state.projects.map(p => p.id));
+    state.all.forEach(e => { if (!ids.has(e.pid)) e.pid = state.pid; });
+    syncCurrent();
+    $('#f-time').value = nowLocal();
+    renderMembers(); renderPayer(); renderShares(); renderCur(); renderProject(); renderAll();
+    showTab(state.tab);
+    setStatus(!!local, local ? '已儲存在此裝置' : '資料會存在這台裝置');
+  }
+  boot();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
