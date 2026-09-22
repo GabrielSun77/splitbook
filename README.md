@@ -1,6 +1,8 @@
 
 # 三人分帳簿 — GitHub Pages 架設說明
 
+https://gabrielsun77.github.io/splitbook/
+
 這個資料夾就是完整的網頁 App（PWA）。放到 GitHub Pages 後，iPhone / Android 都能免登入開啟，
 並可「加入主畫面」變成獨立 App，離線也能用，資料存在各自手機裡。
 
