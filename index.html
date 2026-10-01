@@ -133,6 +133,17 @@ h2{font-size:15px;font-weight:700}
 .amount{position:relative}
 .amount .unit{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
 .amount .input{padding-left:48px}
+.amount-calc .input{padding-right:54px}
+.calcbtn{position:absolute;right:5px;top:50%;transform:translateY(-50%);border:1px solid var(--line-strong);background:var(--surface-2);border-radius:8px;padding:4px 9px;font-size:12px;letter-spacing:-.02em;color:var(--muted);min-height:30px;line-height:1}
+.calcbtn:hover{border-color:var(--accent);color:var(--accent)}
+.calcpad{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2)}
+.calcpad-expr{font-family:var(--mono);font-size:18px;text-align:right;padding:7px 10px;margin-bottom:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:30px;overflow-x:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.calcpad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.calcpad-k{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:10px 0;font-size:16px;font-weight:500;min-height:42px}
+.calcpad-k:hover{border-color:var(--accent);color:var(--accent)}
+.calcpad-k.op{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-soft)}
+.calcpad-k.eq{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.calcpad-k.wide3{grid-column:span 3}
 .shares{display:flex;flex-direction:column;gap:8px}
 .share{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
 .share .who{display:flex;align-items:center;gap:8px;min-width:88px;font-weight:500}
@@ -306,7 +317,34 @@ h2{font-size:15px;font-weight:700}
           </div>
           <div class="field span">
             <label for="f-total">總金額</label>
-            <div class="amount"><span class="unit" id="f-unit">NT$</span><input id="f-total" class="input num" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+            <div class="amount amount-calc">
+              <span class="unit" id="f-unit">NT$</span>
+              <input id="f-total" class="input num" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+              <button type="button" class="calcbtn" id="f-calc-toggle" title="用計算機輸入" aria-label="用計算機輸入總金額">+−×÷</button>
+            </div>
+            <div class="calcpad" id="f-calcpad" hidden>
+              <div class="calcpad-expr num" id="f-calc-expr">0</div>
+              <div class="calcpad-grid">
+                <button type="button" class="calcpad-k" data-k="7">7</button>
+                <button type="button" class="calcpad-k" data-k="8">8</button>
+                <button type="button" class="calcpad-k" data-k="9">9</button>
+                <button type="button" class="calcpad-k op" data-k="/">÷</button>
+                <button type="button" class="calcpad-k" data-k="4">4</button>
+                <button type="button" class="calcpad-k" data-k="5">5</button>
+                <button type="button" class="calcpad-k" data-k="6">6</button>
+                <button type="button" class="calcpad-k op" data-k="*">×</button>
+                <button type="button" class="calcpad-k" data-k="1">1</button>
+                <button type="button" class="calcpad-k" data-k="2">2</button>
+                <button type="button" class="calcpad-k" data-k="3">3</button>
+                <button type="button" class="calcpad-k op" data-k="-">−</button>
+                <button type="button" class="calcpad-k" data-k="C">C</button>
+                <button type="button" class="calcpad-k" data-k="0">0</button>
+                <button type="button" class="calcpad-k" data-k=".">.</button>
+                <button type="button" class="calcpad-k op" data-k="+">+</button>
+                <button type="button" class="calcpad-k wide3" data-k="back">⌫ 倒退一位</button>
+                <button type="button" class="calcpad-k eq" data-k="=">= 完成</button>
+              </div>
+            </div>
           </div>
           <div class="field span">
             <div class="sharehead">
@@ -756,6 +794,7 @@ h2{font-size:15px;font-weight:700}
     $('#f-time').value = nowLocal();
     $('#f-rate').value = state.rate;
     updateRemainder(); showErr('');
+    $('#f-calcpad').hidden = true;
   }
   function setEditMode(e){
     editingId = e ? e.id : null;
@@ -871,6 +910,92 @@ h2{font-size:15px;font-weight:700}
   });
   $('#f-total').addEventListener('input', updateRemainder);
   $('#f-shares').addEventListener('input', e => { if (e.target.matches('input')) updateRemainder(); });
+
+  // ---------- 計算機輸入總金額 ----------
+  let calcExpr = '';
+  function calcEvaluate(expr){
+    expr = expr.replace(/[+\-*/]+$/, ''); // 去掉結尾未完成的運算子
+    const tokens = [];
+    let i = 0;
+    while (i < expr.length){
+      const c = expr[i];
+      if (/[0-9.]/.test(c)){
+        let j = i;
+        while (j < expr.length && /[0-9.]/.test(expr[j])) j++;
+        const n = parseFloat(expr.slice(i, j));
+        if (!isFinite(n)) return null;
+        tokens.push({t:'num', v:n});
+        i = j;
+      } else if ('+-*/'.includes(c)){
+        tokens.push({t:'op', v:c});
+        i++;
+      } else { i++; }
+    }
+    if (!tokens.length || tokens[0].t !== 'num') return null;
+    const pass = [tokens[0].v];
+    let k = 1;
+    while (k < tokens.length - 1){
+      const op = tokens[k], num = tokens[k+1];
+      if (!op || op.t !== 'op' || !num || num.t !== 'num') return null;
+      if (op.v === '*' || op.v === '/'){
+        const prev = pass.pop();
+        pass.push(op.v === '*' ? prev * num.v : (num.v === 0 ? NaN : prev / num.v));
+      } else {
+        pass.push(op.v, num.v);
+      }
+      k += 2;
+    }
+    let result = pass[0];
+    for (let m = 1; m < pass.length; m += 2){
+      result = pass[m] === '+' ? result + pass[m+1] : result - pass[m+1];
+    }
+    return isFinite(result) ? result : null;
+  }
+  function calcDisplay(expr){ return (expr || '0').replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−'); }
+  function renderCalcExpr(){ $('#f-calc-expr').textContent = calcDisplay(calcExpr); }
+  function openCalcPad(){
+    const cur = $('#f-total').value;
+    calcExpr = cur && +cur ? String(+cur) : '';
+    renderCalcExpr();
+    $('#f-calcpad').hidden = false;
+  }
+  function closeCalcPad(){ $('#f-calcpad').hidden = true; }
+  function calcPressKey(k){
+    if (k === 'C'){ calcExpr = ''; renderCalcExpr(); return; }
+    if (k === 'back'){ calcExpr = calcExpr.slice(0, -1); renderCalcExpr(); return; }
+    if (k === '='){
+      const v = calcEvaluate(calcExpr);
+      if (v === null){ toast('算式看不懂，請確認輸入'); return; }
+      const rounded = Math.round(v * 100) / 100;
+      $('#f-total').value = rounded;
+      $('#f-total').dispatchEvent(new Event('input', {bubbles:true}));
+      closeCalcPad();
+      return;
+    }
+    if ('+-*/'.includes(k)){
+      if (!calcExpr) return;
+      if ('+-*/'.includes(calcExpr.slice(-1))) calcExpr = calcExpr.slice(0, -1) + k;
+      else calcExpr += k;
+      renderCalcExpr();
+      return;
+    }
+    if (k === '.'){
+      const lastNum = calcExpr.split(/[+\-*/]/).pop();
+      if (lastNum.includes('.')) return;
+      calcExpr += (calcExpr === '' || '+-*/'.includes(calcExpr.slice(-1))) ? '0.' : '.';
+      renderCalcExpr();
+      return;
+    }
+    calcExpr += k; // 數字
+    renderCalcExpr();
+  }
+  $('#f-calc-toggle').addEventListener('click', () => {
+    if ($('#f-calcpad').hidden) openCalcPad(); else closeCalcPad();
+  });
+  $('#f-calcpad').addEventListener('click', e => {
+    const b = e.target.closest('.calcpad-k'); if (!b) return;
+    calcPressKey(b.dataset.k);
+  });
   $('#f-even').addEventListener('click', () => {
     const total = numVal('#f-total');
     if (!total){ showErr('先輸入總金額，再按平均分。'); $('#f-total').focus(); return; }
