@@ -352,6 +352,29 @@ h2{font-size:15px;font-weight:700}
               <button type="button" class="btn sm" id="f-even">平均分</button>
             </div>
             <div class="shares" id="f-shares"></div>
+            <div class="calcpad" id="f-shares-calcpad" hidden>
+              <div class="calcpad-expr num" id="f-shares-calc-expr">0</div>
+              <div class="calcpad-grid">
+                <button type="button" class="calcpad-k" data-k="7">7</button>
+                <button type="button" class="calcpad-k" data-k="8">8</button>
+                <button type="button" class="calcpad-k" data-k="9">9</button>
+                <button type="button" class="calcpad-k op" data-k="/">÷</button>
+                <button type="button" class="calcpad-k" data-k="4">4</button>
+                <button type="button" class="calcpad-k" data-k="5">5</button>
+                <button type="button" class="calcpad-k" data-k="6">6</button>
+                <button type="button" class="calcpad-k op" data-k="*">×</button>
+                <button type="button" class="calcpad-k" data-k="1">1</button>
+                <button type="button" class="calcpad-k" data-k="2">2</button>
+                <button type="button" class="calcpad-k" data-k="3">3</button>
+                <button type="button" class="calcpad-k op" data-k="-">−</button>
+                <button type="button" class="calcpad-k" data-k="C">C</button>
+                <button type="button" class="calcpad-k" data-k="0">0</button>
+                <button type="button" class="calcpad-k" data-k=".">.</button>
+                <button type="button" class="calcpad-k op" data-k="+">+</button>
+                <button type="button" class="calcpad-k wide3" data-k="back">⌫ 倒退一位</button>
+                <button type="button" class="calcpad-k eq" data-k="=">= 完成</button>
+              </div>
+            </div>
             <div class="check" id="f-check"></div>
           </div>
           <div class="field span" id="f-rate-wrap">
@@ -757,9 +780,10 @@ h2{font-size:15px;font-weight:700}
     wrap.innerHTML = state.names.map((n,i)=>`
       <div class="share">
         <span class="who"><span class="dot" style="background:${PCOLORS[i]}"></span>${esc(n)}${form.payer===i?' <small>買單</small>':''}</span>
-        <div class="amount"><span class="unit">${SYM[form.cur]}</span>
-          <input id="f-share-${i}" class="input num" type="number" inputmode="decimal" min="0" step="any" placeholder="0" data-i="${i}" ${form.payer===i?'readonly tabindex="-1"':''} value="${form.payer===i?'':esc(prev[i])}"></div>
+        <div class="amount${form.payer===i?'':' amount-calc'}"><span class="unit">${SYM[form.cur]}</span>
+          <input id="f-share-${i}" class="input num" type="number" inputmode="decimal" min="0" step="any" placeholder="0" data-i="${i}" ${form.payer===i?'readonly tabindex="-1"':''} value="${form.payer===i?'':esc(prev[i])}">${form.payer===i?'':`<button type="button" class="calcbtn" data-target="f-share-${i}" title="用計算機輸入" aria-label="用計算機輸入${esc(n)}的份額">+−×÷</button>`}</div>
       </div>`).join('');
+    $('#f-shares-calcpad').hidden = true;
     updateRemainder();
   }
   function numVal(id){ const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
@@ -795,6 +819,7 @@ h2{font-size:15px;font-weight:700}
     $('#f-rate').value = state.rate;
     updateRemainder(); showErr('');
     $('#f-calcpad').hidden = true;
+    $('#f-shares-calcpad').hidden = true;
   }
   function setEditMode(e){
     editingId = e ? e.id : null;
@@ -911,8 +936,7 @@ h2{font-size:15px;font-weight:700}
   $('#f-total').addEventListener('input', updateRemainder);
   $('#f-shares').addEventListener('input', e => { if (e.target.matches('input')) updateRemainder(); });
 
-  // ---------- 計算機輸入總金額 ----------
-  let calcExpr = '';
+  // ---------- 計算機輸入金額（總金額 / 各人份額共用） ----------
   function calcEvaluate(expr){
     expr = expr.replace(/[+\-*/]+$/, ''); // 去掉結尾未完成的運算子
     const tokens = [];
@@ -952,49 +976,64 @@ h2{font-size:15px;font-weight:700}
     return isFinite(result) ? result : null;
   }
   function calcDisplay(expr){ return (expr || '0').replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−'); }
-  function renderCalcExpr(){ $('#f-calc-expr').textContent = calcDisplay(calcExpr); }
-  function openCalcPad(){
-    const cur = $('#f-total').value;
-    calcExpr = cur && +cur ? String(+cur) : '';
-    renderCalcExpr();
-    $('#f-calcpad').hidden = false;
+  function makeCalcController(exprSel){
+    let expr = '';
+    let target = null;
+    function render(){ $(exprSel).textContent = calcDisplay(expr); }
+    return {
+      open(input){ target = input; const cur = input.value; expr = cur && +cur ? String(+cur) : ''; render(); },
+      pressKey(k, onDone){
+        if (k === 'C'){ expr = ''; render(); return; }
+        if (k === 'back'){ expr = expr.slice(0, -1); render(); return; }
+        if (k === '='){
+          const v = calcEvaluate(expr);
+          if (v === null){ toast('算式看不懂，請確認輸入'); return; }
+          const rounded = Math.round(v * 100) / 100;
+          target.value = rounded;
+          target.dispatchEvent(new Event('input', {bubbles:true}));
+          if (onDone) onDone();
+          return;
+        }
+        if ('+-*/'.includes(k)){
+          if (!expr) return;
+          if ('+-*/'.includes(expr.slice(-1))) expr = expr.slice(0, -1) + k;
+          else expr += k;
+          render();
+          return;
+        }
+        if (k === '.'){
+          const lastNum = expr.split(/[+\-*/]/).pop();
+          if (lastNum.includes('.')) return;
+          expr += (expr === '' || '+-*/'.includes(expr.slice(-1))) ? '0.' : '.';
+          render();
+          return;
+        }
+        expr += k; render();
+      }
+    };
   }
-  function closeCalcPad(){ $('#f-calcpad').hidden = true; }
-  function calcPressKey(k){
-    if (k === 'C'){ calcExpr = ''; renderCalcExpr(); return; }
-    if (k === 'back'){ calcExpr = calcExpr.slice(0, -1); renderCalcExpr(); return; }
-    if (k === '='){
-      const v = calcEvaluate(calcExpr);
-      if (v === null){ toast('算式看不懂，請確認輸入'); return; }
-      const rounded = Math.round(v * 100) / 100;
-      $('#f-total').value = rounded;
-      $('#f-total').dispatchEvent(new Event('input', {bubbles:true}));
-      closeCalcPad();
-      return;
-    }
-    if ('+-*/'.includes(k)){
-      if (!calcExpr) return;
-      if ('+-*/'.includes(calcExpr.slice(-1))) calcExpr = calcExpr.slice(0, -1) + k;
-      else calcExpr += k;
-      renderCalcExpr();
-      return;
-    }
-    if (k === '.'){
-      const lastNum = calcExpr.split(/[+\-*/]/).pop();
-      if (lastNum.includes('.')) return;
-      calcExpr += (calcExpr === '' || '+-*/'.includes(calcExpr.slice(-1))) ? '0.' : '.';
-      renderCalcExpr();
-      return;
-    }
-    calcExpr += k; // 數字
-    renderCalcExpr();
-  }
+  const totalCalc = makeCalcController('#f-calc-expr');
   $('#f-calc-toggle').addEventListener('click', () => {
-    if ($('#f-calcpad').hidden) openCalcPad(); else closeCalcPad();
+    const pad = $('#f-calcpad');
+    if (pad.hidden){ totalCalc.open($('#f-total')); pad.hidden = false; } else pad.hidden = true;
   });
   $('#f-calcpad').addEventListener('click', e => {
     const b = e.target.closest('.calcpad-k'); if (!b) return;
-    calcPressKey(b.dataset.k);
+    totalCalc.pressKey(b.dataset.k, () => { $('#f-calcpad').hidden = true; });
+  });
+  const sharesCalc = makeCalcController('#f-shares-calc-expr');
+  $('#f-shares').addEventListener('click', e => {
+    const b = e.target.closest('.calcbtn[data-target]'); if (!b) return;
+    const pad = $('#f-shares-calcpad');
+    const input = $(`#${b.dataset.target}`);
+    if (!pad.hidden && pad.dataset.target === b.dataset.target){ pad.hidden = true; return; }
+    sharesCalc.open(input);
+    pad.dataset.target = b.dataset.target;
+    pad.hidden = false;
+  });
+  $('#f-shares-calcpad').addEventListener('click', e => {
+    const b = e.target.closest('.calcpad-k'); if (!b) return;
+    sharesCalc.pressKey(b.dataset.k, () => { $('#f-shares-calcpad').hidden = true; });
   });
   $('#f-even').addEventListener('click', () => {
     const total = numVal('#f-total');
