@@ -134,7 +134,9 @@ h2{font-size:15px;font-weight:700}
 .amount .unit{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
 .amount .input{padding-left:48px}
 .amount-calc .input{padding-right:54px}
-.calcbtn{position:absolute;right:5px;top:50%;transform:translateY(-50%);border:1px solid var(--line-strong);background:var(--surface-2);border-radius:8px;padding:4px 9px;font-size:12px;letter-spacing:-.02em;color:var(--muted);min-height:30px;line-height:1}
+.amount-calc .input::-webkit-outer-spin-button,.amount-calc .input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.amount-calc .input[type=number]{-moz-appearance:textfield}
+.calcbtn{position:absolute;right:5px;top:50%;transform:translateY(-50%);z-index:1;border:1px solid var(--line-strong);background:var(--surface-2);border-radius:8px;padding:4px 9px;font-size:12px;letter-spacing:-.02em;color:var(--muted);min-height:30px;line-height:1}
 .calcbtn:hover{border-color:var(--accent);color:var(--accent)}
 .calcpad{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2)}
 .calcpad-expr{font-family:var(--mono);font-size:18px;text-align:right;padding:7px 10px;margin-bottom:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:30px;overflow-x:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
